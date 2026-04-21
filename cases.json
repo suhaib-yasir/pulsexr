@@ -1,0 +1,74 @@
+{
+  "16": {
+    "case_id": "16",
+    "dice": 0.8674,
+    "stroke_pct": 3.99,
+    "cbf_mean": 655.389,
+    "cbf_stroke": 1030.774,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MODERATE",
+    "brain_file": "case_16_brain.gltf",
+    "stroke_file": "case_16_stroke.gltf",
+    "pen_file": "case_16_penumbra.gltf"
+  },
+  "17": {
+    "case_id": "17",
+    "dice": 0.6453,
+    "stroke_pct": 1.03,
+    "cbf_mean": 479.038,
+    "cbf_stroke": 1560.007,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MILD",
+    "brain_file": "case_17_brain.gltf",
+    "stroke_file": "case_17_stroke.gltf",
+    "pen_file": "case_17_penumbra.gltf"
+  },
+  "30": {
+    "case_id": "30",
+    "dice": 0.7725,
+    "stroke_pct": 3.07,
+    "cbf_mean": 337.216,
+    "cbf_stroke": 1023.213,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MODERATE",
+    "brain_file": "case_30_brain.gltf",
+    "stroke_file": "case_30_stroke.gltf",
+    "pen_file": "case_30_penumbra.gltf"
+  },
+  "1": {
+    "case_id": "1",
+    "dice": 0.8547,
+    "stroke_pct": 4.34,
+    "cbf_mean": 455.884,
+    "cbf_stroke": 1121.229,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MODERATE",
+    "brain_file": "case_1_brain.gltf",
+    "stroke_file": "case_1_stroke.gltf",
+    "pen_file": "case_1_penumbra.gltf"
+  },
+  "12": {
+    "case_id": "12",
+    "dice": 0.7293,
+    "stroke_pct": 2.17,
+    "cbf_mean": 628.188,
+    "cbf_stroke": 2066.408,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MODERATE",
+    "brain_file": "case_12_brain.gltf",
+    "stroke_file": "case_12_stroke.gltf",
+    "pen_file": "case_12_penumbra.gltf"
+  },
+  "28": {
+    "case_id": "28",
+    "dice": 0.7385,
+    "stroke_pct": 3.1,
+    "cbf_mean": 501.965,
+    "cbf_stroke": 1302.645,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MODERATE",
+    "brain_file": "case_28_brain.gltf",
+    "stroke_file": "case_28_stroke.gltf",
+    "pen_file": "case_28_penumbra.gltf"
+  }
+}

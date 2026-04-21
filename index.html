@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PulseXR — AI Stroke Detection VR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#03030e;--panel:rgba(3,3,20,0.96);--border:#1a2a4a;
+          --accent:#44aaff;--green:#44ffaa;--red:#ff3333;
+          --orange:#ff8c00;--text:#ccd6e8;--dim:#445566;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);font-family:'Share Tech Mono',monospace;
+         color:var(--text);overflow:hidden;}
+    #topbar{position:fixed;top:0;left:0;right:0;height:56px;
+            background:var(--panel);border-bottom:1px solid var(--border);
+            display:flex;align-items:center;gap:10px;padding:0 16px;z-index:1000;}
+    #logo{font-family:'Orbitron',sans-serif;font-size:18px;
+          color:var(--accent);letter-spacing:4px;white-space:nowrap;}
+    #logo span{color:#ff4488;}
+    select{background:#080820;color:var(--text);border:1px solid var(--border);
+           padding:6px 10px;border-radius:4px;
+           font-family:'Share Tech Mono',monospace;
+           font-size:12px;cursor:pointer;min-width:260px;}
+    .btn{background:#080820;color:#88aacc;border:1px solid var(--border);
+         padding:5px 11px;border-radius:4px;
+         font-family:'Share Tech Mono',monospace;
+         font-size:11px;cursor:pointer;transition:all 0.15s;}
+    .btn:hover{background:#101830;border-color:#3366aa;}
+    .btn.on{background:#0d2040;color:var(--accent);border-color:var(--accent);
+            box-shadow:0 0 8px rgba(68,170,255,0.3);}
+    .btn-vr{background:#0a1a3a;color:var(--accent);
+            border:1px solid var(--accent);font-weight:bold;
+            padding:6px 16px;font-size:12px;
+            box-shadow:0 0 10px rgba(68,170,255,0.2);}
+    .btn-vr:hover{background:#0f2550;box-shadow:0 0 16px rgba(68,170,255,0.4);}
+    .sep{width:1px;height:28px;background:var(--border);margin:0 4px;}
+    #badge{position:fixed;top:64px;right:16px;padding:10px 20px;
+           border-radius:5px;font-family:'Orbitron',sans-serif;
+           font-size:12px;font-weight:700;letter-spacing:2px;z-index:1000;}
+    .badge-stroke{background:rgba(160,10,10,0.92);border:1px solid #ff3333;
+                  color:#fff;animation:pulse-badge 2s infinite;}
+    .badge-normal{background:rgba(10,120,60,0.92);border:1px solid #44ff88;color:#fff;}
+    @keyframes pulse-badge{
+      0%,100%{box-shadow:0 0 20px rgba(255,30,30,0.4);}
+      50%{box-shadow:0 0 40px rgba(255,30,30,0.75);}
+    }
+    #severity{position:fixed;top:112px;right:16px;padding:5px 14px;
+              border-radius:4px;font-size:11px;z-index:1000;letter-spacing:1px;}
+    .sev-severe{background:rgba(150,0,0,0.85);border:1px solid #ff4444;color:#ffaaaa;}
+    .sev-moderate{background:rgba(140,70,0,0.85);border:1px solid #ff8800;color:#ffcc88;}
+    .sev-mild{background:rgba(80,120,0,0.85);border:1px solid #aaff44;color:#ccff88;}
+    #legend{position:fixed;top:64px;left:16px;background:var(--panel);
+            border:1px solid var(--border);border-radius:6px;
+            padding:14px 18px;z-index:1000;font-size:12px;min-width:175px;}
+    #legend h3{font-family:'Orbitron',sans-serif;font-size:10px;
+               color:var(--dim);letter-spacing:2px;margin-bottom:10px;}
+    .leg{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+    .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+    #cbf-bar{position:fixed;top:64px;left:210px;background:var(--panel);
+             border:1px solid var(--border);border-radius:6px;
+             padding:12px 16px;z-index:1000;width:210px;}
+    #cbf-bar h3{font-family:'Orbitron',sans-serif;font-size:10px;
+                color:var(--dim);letter-spacing:2px;margin-bottom:8px;}
+    #cbf-gradient{height:14px;border-radius:3px;
+                  background:linear-gradient(to right,
+                  #0000cc,#0088ff,#00ccaa,#88cc00,#ffaa00,#ff3300);
+                  margin-bottom:4px;}
+    #cbf-marker-wrap{position:relative;height:20px;margin-bottom:2px;}
+    #cbf-marker{position:absolute;top:0;width:3px;height:18px;
+                background:white;border-radius:1px;
+                transition:left 0.6s ease;transform:translateX(-50%);}
+    #cbf-marker-label{position:absolute;top:0;font-size:10px;color:white;
+                      white-space:nowrap;transition:left 0.6s ease;
+                      transform:translateX(-50%);}
+    #cbf-labels{display:flex;justify-content:space-between;
+                font-size:10px;color:var(--dim);}
+    #metrics{position:fixed;bottom:0;left:0;right:0;height:52px;
+             background:var(--panel);border-top:1px solid var(--border);
+             display:flex;align-items:center;z-index:1000;}
+    .met{display:flex;flex-direction:column;padding:0 16px;
+         border-right:1px solid var(--border);
+         height:100%;justify-content:center;}
+    .met:last-child{border-right:none;}
+    .met-lbl{color:var(--dim);font-size:9px;letter-spacing:1px;text-transform:uppercase;}
+    .met-val{color:var(--green);font-size:13px;font-weight:bold;
+             font-family:'Orbitron',sans-serif;}
+    .met-val.red{color:var(--red);}
+    .met-val.blue{color:var(--accent);}
+    .met-val.orange{color:var(--orange);}
+    #cam-presets{position:fixed;bottom:60px;right:16px;background:var(--panel);
+                 border:1px solid var(--border);border-radius:6px;
+                 padding:10px;z-index:1000;display:flex;flex-direction:column;gap:5px;}
+    #cam-presets span{font-size:9px;color:var(--dim);text-align:center;
+                      margin-bottom:2px;letter-spacing:1px;}
+    .cam-btn{background:#080820;color:#88aacc;border:1px solid var(--border);
+             padding:4px 10px;border-radius:3px;font-size:10px;cursor:pointer;
+             text-align:center;font-family:'Share Tech Mono',monospace;}
+    .cam-btn:hover{background:#101830;color:var(--accent);}
+    #hint{position:fixed;bottom:60px;left:16px;background:var(--panel);
+          border:1px solid var(--border);border-radius:5px;
+          padding:10px 14px;font-size:10px;color:var(--dim);
+          z-index:1000;line-height:2.0;}
+    #hint span{color:#5577aa;}
+    #loading{position:fixed;top:0;left:0;right:0;bottom:0;
+             background:var(--bg);z-index:5000;
+             display:flex;flex-direction:column;
+             align-items:center;justify-content:center;gap:16px;}
+    #loading-ring{width:60px;height:60px;
+                  border:3px solid var(--border);
+                  border-top:3px solid var(--accent);
+                  border-radius:50%;animation:spin 0.8s linear infinite;}
+    #loading-title{font-family:'Orbitron',sans-serif;
+                   font-size:22px;color:var(--accent);letter-spacing:4px;}
+    #loading-text{color:var(--dim);font-size:13px;}
+    #loading-sub{color:#334455;font-size:11px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+  </style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loading">
+  <div id="loading-ring"></div>
+  <div id="loading-title">PulseXR</div>
+  <div id="loading-text">Loading MNI152 Brain Atlas...</div>
+  <div id="loading-sub">AI Stroke Detection VR — ISLES 2015 SPES</div>
+</div>
+
+<!-- Top bar -->
+<div id="topbar">
+  <div id="logo">Pulse<span>XR</span></div>
+  <div class="sep"></div>
+  <select id="case-sel" onchange="loadCase(this.value)"></select>
+  <div class="sep"></div>
+  <button class="btn on" id="btn-brain"  onclick="toggle('brain-el','btn-brain')">🧠 Brain</button>
+  <button class="btn on" id="btn-stroke" onclick="toggle('stroke-el','btn-stroke')">🔴 Stroke</button>
+  <button class="btn on" id="btn-pen"    onclick="toggle('pen-el','btn-pen')">🟠 Penumbra</button>
+  <div class="sep"></div>
+  <button class="btn" onclick="resetCam()">↺ Reset</button>
+  <button class="btn on" id="btn-spin" onclick="toggleSpin()">⟳ Spin</button>
+  <div class="sep"></div>
+  <button class="btn btn-vr"
+          onclick="document.querySelector('a-scene').enterVR()">🥽 ENTER VR</button>
+</div>
+
+<div id="badge" class="badge-normal">LOADING...</div>
+<div id="severity"></div>
+
+<div id="legend">
+  <h3>TISSUE LEGEND</h3>
+  <div class="leg">
+    <div class="dot" style="background:rgba(190,185,210,0.5);border:1px solid #aaa;"></div>
+    <span>Brain (MNI152 Atlas)</span>
+  </div>
+  <div class="leg">
+    <div class="dot" style="background:#e81408;box-shadow:0 0 6px #ff3300;"></div>
+    <span>Stroke Core</span>
+  </div>
+  <div class="leg">
+    <div class="dot" style="background:#ff8c00;box-shadow:0 0 6px #ff8800;"></div>
+    <span>Penumbra (at-risk)</span>
+  </div>
+</div>
+
+<div id="cbf-bar">
+  <h3>CEREBRAL BLOOD FLOW</h3>
+  <div id="cbf-gradient"></div>
+  <div id="cbf-marker-wrap">
+    <div id="cbf-marker" style="left:50%"></div>
+    <div id="cbf-marker-label" style="left:50%">—</div>
+  </div>
+  <div id="cbf-labels">
+    <span>Low</span><span>Normal</span><span>High</span>
+  </div>
+</div>
+
+<div id="cam-presets">
+  <span>CAMERA</span>
+  <div class="cam-btn" onclick="setCamera(0,1.6,4)">Front</div>
+  <div class="cam-btn" onclick="setCamera(0,5,0.1)">Top</div>
+  <div class="cam-btn" onclick="setCamera(4,1.6,0)">Right</div>
+  <div class="cam-btn" onclick="setCamera(-4,1.6,0)">Left</div>
+</div>
+
+<div id="hint">
+  <span>DRAG</span>  rotate view<br>
+  <span>SCROLL</span> zoom in/out<br>
+  <span>WASD</span>  move camera<br>
+  <span>B/S/P</span>  toggle layers<br>
+  <span>SPACE</span>  toggle spin
+</div>
+
+<div id="metrics">
+  <div class="met"><span class="met-lbl">Case ID</span>
+    <span class="met-val blue" id="m-case">—</span></div>
+  <div class="met"><span class="met-lbl">Dice Score</span>
+    <span class="met-val" id="m-dice">—</span></div>
+  <div class="met"><span class="met-lbl">Stroke Volume</span>
+    <span class="met-val red" id="m-spct">—</span></div>
+  <div class="met"><span class="met-lbl">Severity</span>
+    <span class="met-val orange" id="m-sev">—</span></div>
+  <div class="met"><span class="met-lbl">Mean CBF</span>
+    <span class="met-val" id="m-cbf">—</span></div>
+  <div class="met"><span class="met-lbl">Stroke CBF</span>
+    <span class="met-val red" id="m-scbf">—</span></div>
+  <div class="met"><span class="met-lbl">CBF Ratio</span>
+    <span class="met-val orange" id="m-cbf-drop">—</span></div>
+  <div class="met"><span class="met-lbl">Model</span>
+    <span class="met-val blue">SegResNet 3D</span></div>
+  <div class="met"><span class="met-lbl">Dataset</span>
+    <span class="met-val blue">ISLES 2015 SPES</span></div>
+</div>
+
+<a-scene
+  background="color:#03030e"
+  renderer="antialias:true;colorManagement:true;
+            physicallyCorrectLights:true;sortObjects:true;
+            logarithmicDepthBuffer:true"
+  vr-mode-ui="enabled:true"
+  style="position:fixed;top:56px;left:0;right:0;bottom:52px;">
+
+  <a-assets timeout="120000">
+    <a-asset-item id="atlas-asset" src="atlas_brain.gltf"></a-asset-item>
+  </a-assets>
+
+  <a-light type="ambient"     color="#2a3a5a" intensity="0.7"></a-light>
+  <a-light type="directional" color="#aaccff" intensity="1.6" position="3 6 4"></a-light>
+  <a-light type="directional" color="#ffaa77" intensity="0.35" position="-4 -2 -3"></a-light>
+  <a-light type="point" color="#0066ff" intensity="0.5" position="-3 3 -2"></a-light>
+  <a-light type="point" color="#ff4400" intensity="0.2" position="3 -1 2"></a-light>
+
+  <a-entity id="rig" position="0 1.6 4">
+    <a-camera look-controls wasd-controls fov="65">
+      <a-cursor color="#44aaff" opacity="0.4" raycaster="far:20"></a-cursor>
+    </a-camera>
+  </a-entity>
+
+  <a-entity laser-controls="hand:left"  raycaster="far:15"></a-entity>
+  <a-entity laser-controls="hand:right" raycaster="far:15"></a-entity>
+
+  <a-entity id="brain-rot" position="0 1.9 -1"
+            animation__spin="property:rotation;from:0 0 0;to:0 360 0;
+                             dur:24000;easing:linear;loop:true">
+
+    <a-entity id="brain-el"  scale="1.0 1.0 1.0" visible="true"></a-entity>
+    <a-entity id="stroke-el" scale="1.0 1.0 1.0" visible="true"
+              animation__pulse="property:scale;from:1.0 1.0 1.0;to:1.03 1.03 1.03;
+                dur:1200;easing:easeInOutSine;loop:true;dir:alternate">
+    </a-entity>
+    <a-entity id="pen-el" scale="1.0 1.0 1.0" visible="true"></a-entity>
+    <a-sphere id="stroke-glow" radius="0.1" color="#ff2200" opacity="0.0"></a-sphere>
+
+  </a-entity>
+
+  <a-plane rotation="-90 0 0" width="16" height="16"
+           color="#050510" opacity="1.0"></a-plane>
+  <a-entity geometry="primitive:plane;width:16;height:16"
+            material="color:#0a1428;wireframe:true;opacity:0.15"
+            rotation="-90 0 0" position="0 0.005 0"></a-entity>
+
+  <a-entity id="vr-hud" position="0 1.6 -1.3" visible="false">
+    <a-plane color="#030318" opacity="0.88" width="1.6" height="0.7"
+             position="0 0.5 0"></a-plane>
+    <a-text id="vr-title" value="PulseXR" color="#44aaff" align="center"
+            width="1.4" position="0 0.72 0.01"></a-text>
+    <a-text id="vr-diag"  value="LOADING" color="#ff3333" align="center"
+            width="1.3" position="0 0.56 0.01"></a-text>
+    <a-text id="vr-stats" value="—"       color="#44ffaa" align="center"
+            width="1.2" position="0 0.34 0.01"></a-text>
+  </a-entity>
+
+</a-scene>
+
+<script>
+const CASES = {
+  "16": {
+    "case_id": "16",
+    "dice": 0.8674,
+    "stroke_pct": 3.99,
+    "cbf_mean": 655.389,
+    "cbf_stroke": 1030.774,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MODERATE",
+    "brain_file": "case_16_brain.gltf",
+    "stroke_file": "case_16_stroke.gltf",
+    "pen_file": "case_16_penumbra.gltf"
+  },
+  "17": {
+    "case_id": "17",
+    "dice": 0.6453,
+    "stroke_pct": 1.03,
+    "cbf_mean": 479.038,
+    "cbf_stroke": 1560.007,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MILD",
+    "brain_file": "case_17_brain.gltf",
+    "stroke_file": "case_17_stroke.gltf",
+    "pen_file": "case_17_penumbra.gltf"
+  },
+  "30": {
+    "case_id": "30",
+    "dice": 0.7725,
+    "stroke_pct": 3.07,
+    "cbf_mean": 337.216,
+    "cbf_stroke": 1023.213,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MODERATE",
+    "brain_file": "case_30_brain.gltf",
+    "stroke_file": "case_30_stroke.gltf",
+    "pen_file": "case_30_penumbra.gltf"
+  },
+  "1": {
+    "case_id": "1",
+    "dice": 0.8547,
+    "stroke_pct": 4.34,
+    "cbf_mean": 455.884,
+    "cbf_stroke": 1121.229,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MODERATE",
+    "brain_file": "case_1_brain.gltf",
+    "stroke_file": "case_1_stroke.gltf",
+    "pen_file": "case_1_penumbra.gltf"
+  },
+  "12": {
+    "case_id": "12",
+    "dice": 0.7293,
+    "stroke_pct": 2.17,
+    "cbf_mean": 628.188,
+    "cbf_stroke": 2066.408,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MODERATE",
+    "brain_file": "case_12_brain.gltf",
+    "stroke_file": "case_12_stroke.gltf",
+    "pen_file": "case_12_penumbra.gltf"
+  },
+  "28": {
+    "case_id": "28",
+    "dice": 0.7385,
+    "stroke_pct": 3.1,
+    "cbf_mean": 501.965,
+    "cbf_stroke": 1302.645,
+    "diagnosis": "ACUTE STROKE",
+    "severity": "MODERATE",
+    "brain_file": "case_28_brain.gltf",
+    "stroke_file": "case_28_stroke.gltf",
+    "pen_file": "case_28_penumbra.gltf"
+  }
+};
+
+const vis={'brain-el':true,'stroke-el':true,'pen-el':true};
+let spinning=true;
+
+// Build case dropdown from CASES data
+function buildDropdown(){
+  const sel=document.getElementById('case-sel');
+  Object.keys(CASES).sort().forEach(cid=>{
+    const d=CASES[cid];
+    const opt=document.createElement('option');
+    opt.value=cid;
+    opt.textContent=`Case ${cid} — ${d.diagnosis} | Dice ${d.dice.toFixed(3)}`;
+    sel.appendChild(opt);
+  });
+}
+
+function applyMat(elId,opts){
+  const obj=document.getElementById(elId).getObject3D('mesh');
+  if(!obj)return;
+  obj.traverse(n=>{
+    if(!n.isMesh||!n.material)return;
+    n.material=n.material.clone();
+    n.material.transparent=opts.transparent;
+    n.material.opacity=opts.opacity;
+    n.material.depthWrite=opts.depthWrite;
+    n.renderOrder=opts.renderOrder||0;
+    if(opts.side!==undefined)n.material.side=opts.side;
+    if(opts.color)n.material.color.setRGB(...opts.color);
+    if(opts.emissive&&n.material.emissive)
+      n.material.emissive.setRGB(...opts.emissive);
+    n.material.needsUpdate=true;
+  });
+}
+
+// Load atlas brain ONCE
+function loadAtlas(){
+  const brainEl=document.getElementById('brain-el');
+  brainEl.setAttribute('gltf-model','#atlas-asset');
+  brainEl.addEventListener('model-loaded',()=>{
+    applyMat('brain-el',{
+      transparent:true,opacity:0.22,depthWrite:true,
+      side:2,color:[0.72,0.70,0.82],renderOrder:0
+    });
+    document.getElementById('loading').style.display='none';
+    // Load first case after atlas is ready
+    const sel=document.getElementById('case-sel');
+    if(sel.options.length>0) loadCase(sel.options[0].value);
+  },{once:true});
+}
+
+function loadCase(cid){
+  const d=CASES[cid];if(!d)return;
+
+  function setModel(id,file){
+    const el=document.getElementById(id);
+    el.removeAttribute('gltf-model');
+    if(file) setTimeout(()=>el.setAttribute('gltf-model',file),80);
+  }
+
+  setModel('stroke-el', d.stroke_file);
+  setModel('pen-el',    d.pen_file);
+
+  document.getElementById('stroke-el').addEventListener('model-loaded',()=>{
+    applyMat('stroke-el',{
+      transparent:false,opacity:1.0,depthWrite:true,
+      color:[0.92,0.08,0.05],renderOrder:2,emissive:[0.3,0.0,0.0]
+    });
+  },{once:true});
+
+  document.getElementById('pen-el').addEventListener('model-loaded',()=>{
+    applyMat('pen-el',{
+      transparent:true,opacity:0.72,depthWrite:false,
+      color:[1.0,0.55,0.0],renderOrder:1,emissive:[0.15,0.06,0.0]
+    });
+  },{once:true});
+
+  const pct=Math.min(Math.round((d.cbf_mean/1000)*100),95);
+  const ratio=(d.cbf_stroke/d.cbf_mean).toFixed(2);
+
+  document.getElementById('m-case').textContent ='Case '+cid;
+  document.getElementById('m-dice').textContent  =d.dice.toFixed(3);
+  document.getElementById('m-spct').textContent  =d.stroke_pct.toFixed(1)+'%';
+  document.getElementById('m-sev').textContent   =d.severity;
+  document.getElementById('m-cbf').textContent   =d.cbf_mean.toFixed(0);
+  document.getElementById('m-scbf').textContent  =d.cbf_stroke.toFixed(0);
+  document.getElementById('m-cbf-drop').textContent=ratio+'x';
+  document.getElementById('cbf-marker').style.left=pct+'%';
+  document.getElementById('cbf-marker-label').style.left=pct+'%';
+  document.getElementById('cbf-marker-label').textContent=d.cbf_mean.toFixed(0);
+
+  const badge=document.getElementById('badge');
+  badge.textContent=d.diagnosis==='ACUTE STROKE'
+    ?'⚠  ACUTE ISCHEMIC STROKE DETECTED':'✓  NO STROKE DETECTED';
+  badge.className=d.diagnosis==='ACUTE STROKE'?'badge-stroke':'badge-normal';
+
+  const sev=document.getElementById('severity');
+  sev.textContent='◈ '+d.severity+' STROKE';
+  sev.className='sev-'+d.severity.toLowerCase();
+
+  const g=document.getElementById('stroke-glow');
+  if(d.diagnosis==='ACUTE STROKE'){
+    g.setAttribute('opacity','0.05');
+    g.setAttribute('radius',(0.1+d.stroke_pct*0.02).toString());
+  }else g.setAttribute('opacity','0.0');
+
+  document.getElementById('vr-diag').setAttribute('value',
+    d.diagnosis==='ACUTE STROKE'?'⚠ STROKE — '+d.severity:'✓ NO STROKE');
+  document.getElementById('vr-diag').setAttribute('color',
+    d.diagnosis==='ACUTE STROKE'?'#ff3333':'#44ff88');
+  document.getElementById('vr-stats').setAttribute('value',
+    'Case '+cid+'  Dice '+d.dice.toFixed(3)+
+    '\nStroke '+d.stroke_pct.toFixed(1)+'%  CBF '+d.cbf_mean.toFixed(0));
+}
+
+function toggle(elId,btnId){
+  vis[elId]=!vis[elId];
+  document.getElementById(elId).setAttribute('visible',vis[elId]);
+  document.getElementById(btnId).classList.toggle('on',vis[elId]);
+}
+function setCamera(x,y,z){
+  document.getElementById('rig').setAttribute('position',x+' '+y+' '+z);
+}
+function resetCam(){setCamera(0,1.6,4);}
+function toggleSpin(){
+  spinning=!spinning;
+  const rot=document.getElementById('brain-rot');
+  const btn=document.getElementById('btn-spin');
+  if(spinning){
+    rot.setAttribute('animation__spin',
+      'property:rotation;from:0 0 0;to:0 360 0;dur:24000;easing:linear;loop:true');
+    btn.classList.add('on');
+  }else{rot.removeAttribute('animation__spin');btn.classList.remove('on');}
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='b')toggle('brain-el','btn-brain');
+  if(e.key==='s')toggle('stroke-el','btn-stroke');
+  if(e.key==='p')toggle('pen-el','btn-pen');
+  if(e.key==='r')resetCam();
+  if(e.key===' ')toggleSpin();
+});
+document.querySelector('a-scene').addEventListener('enter-vr',()=>
+  document.getElementById('vr-hud').setAttribute('visible','true'));
+document.querySelector('a-scene').addEventListener('exit-vr',()=>
+  document.getElementById('vr-hud').setAttribute('visible','false'));
+
+window.addEventListener('load',()=>{
+  buildDropdown();
+  loadAtlas();
+});
+</script>
+</body>
+</html>
